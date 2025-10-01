@@ -121,7 +121,7 @@ show_always = false
 
 [directory]
 home_symbol = "⌂"
-truncation_length = 2
+truncation_length = 0
 truncation_symbol = "□ "
 read_only = " ◈"
 use_os_path_sep = true
