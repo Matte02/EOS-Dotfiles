@@ -21,5 +21,6 @@ def build_parser() -> argparse.ArgumentParser:
         help="the subcommand to run",
         required=True,
     )
-
+    from marcyra.subcommands import wallpaper
+    wallpaper.register(subparsers)
     return parser
