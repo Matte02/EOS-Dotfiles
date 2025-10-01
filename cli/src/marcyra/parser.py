@@ -1,15 +1,15 @@
 import argparse
 from importlib import metadata
 
-def build_parser() -> argparse.ArgumentParser:
-    print("Build Parser")
 
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="marcyra",
         description="Marcyra dotfiles control CLI",
     )
     parser.add_argument(
-        "-v", "--version",
+        "-v",
+        "--version",
         action="version",
         version=f"%(prog)s {metadata.version('marcyra')}",
     )
@@ -22,5 +22,6 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
     )
     from marcyra.subcommands import wallpaper
+
     wallpaper.register(subparsers)
     return parser
