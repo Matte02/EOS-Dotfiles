@@ -3,3 +3,6 @@ build/
 *.egg-info/
 /dist/
 /result
+
+
+.qmlls.ini
