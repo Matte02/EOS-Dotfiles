@@ -23,5 +23,5 @@ _darcs
 ^/COPYING
 
 ^cli$
-
+^build$
 /quickshell/plugin(/|$)
