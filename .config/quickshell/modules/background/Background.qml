@@ -1,8 +1,11 @@
+pragma ComponentBehavior: Bound
+
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Io
 import QtQuick
-import Marcyra.Models
+
+import qs.utils
+import qs.services
 
 Loader {
     active: true
@@ -14,16 +17,13 @@ Loader {
             required property ShellScreen modelData
 
             screen: modelData
-            color: "#AA000000"
+            color: "#000000"
 
-            readonly property string currentNamePath: `/home/matte/.local/state/marcyra/wallpaper/outputs.json`
-            property string actualCurrent
-
-            // Convenience: the Hyprland/Quickshell output name for this window
             readonly property string outputName: (modelData && modelData.name) ? modelData.name : ""
+            property string sourcePath: Wallpapers.getWallpaper(outputName)
 
             WlrLayershell.exclusionMode: ExclusionMode.Ignore
-            WlrLayershell.layer: WlrLayershell.Background
+            WlrLayershell.layer: WlrLayer.Background
 
             anchors {
                 top: true
@@ -32,45 +32,16 @@ Loader {
                 right: true
             }
 
-            FileView {
-                id: outputsFile
-                path: win.currentNamePath
-                watchChanges: true
-                onFileChanged: reload()
-                onLoaded: win.updateFromJson()
-                // If the loader didn’t trigger for some reason but text changed, still update
-                onTextChanged: win.updateFromJson()
-            }
-
-            // Re-extract when this window moves to a different screen or the name changes
-            onScreenChanged: updateFromJson()
-
-            // Extractor: parse JSON and set actualCurrent based on outputName
-            function updateFromJson() {
-                if (!outputName || !outputsFile.path)
-                    return;
-
-                try {
-                    const txt = outputsFile.text();
-                    if (!txt || txt.trim().length === 0) {
-                        win.actualCurrent = "";
-                        return;
-                    }
-                    const obj = JSON.parse(txt);
-                    const path = obj && obj[outputName] ? String(obj[outputName]) : "";
-                    win.actualCurrent = path;
-                } catch (e) {
-                    console.warn("Failed to parse outputs.json:", e);
-                    win.actualCurrent = "";
+            Connections {
+                target: Wallpapers
+                function onChanged() {
+                    win.sourcePath = Wallpapers.getWallpaper(win.outputName);
                 }
             }
 
-            Image {
+            Wallpaper {
                 anchors.fill: parent
-                source: win.actualCurrent ? ("file://" + win.actualCurrent) : ""
-                fillMode: Image.PreserveAspectCrop
-                cache: false
-                visible: !!win.actualCurrent
+                source: win.sourcePath
             }
         }
     }

@@ -33,21 +33,21 @@ function(qml_module arg_TARGET)
     target_link_libraries(${arg_TARGET} PRIVATE Qt::Core Qt::Qml ${arg_LIBRARIES})
 endfunction()
 
-#qml_module(marcyra
-#    URI Marcyra
-#    #SOURCES
-#        #cutils.hpp cutils.cpp
+qml_module(marcyra
+    URI Marcyra
+    SOURCES
+        cutils.hpp cutils.cpp
 #        #qalculator.hpp qalculator.cpp
 #        #appdb.hpp appdb.cpp
 #        #requests.hpp requests.cpp
 #        #toaster.hpp toaster.cpp
 #        #imageanalyser.hpp imageanalyser.cpp
-#    LIBRARIES
-#        Qt::Gui
-#        Qt::Quick
-#        Qt::Concurrent
-#        Qt::Sql
+    LIBRARIES
+        Qt::Gui
+        Qt::Quick
+        Qt::Concurrent
+        Qt::Sql
 #        PkgConfig::Qalculate
-#)
+)
 
 add_subdirectory(Models)
