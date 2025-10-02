@@ -27,5 +27,5 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 if("plugin" IN_LIST ENABLE_MODULES)
-    add_subdirectory(.config/quickshell/plugin)
+    add_subdirectory(.config/quickshell/marcyra/plugin)
 endif()
