@@ -19,6 +19,8 @@ m_state_dir = state_dir / "marcyra"
 m_cache_dir = cache_dir / "marcyra"
 
 # Wallpaper state (multi-output)
+
+wallpapers_dir = os.getenv("MARCYRA_WALLPAPERS_DIR", pictures_dir / "Wallpapers")
 wallpaper_state_dir = m_state_dir / "wallpaper"
 wallpaper_outputs_dir = wallpaper_state_dir / "outputs"  # per-output symlinks
 wallpaper_map_path = wallpaper_state_dir / "outputs.json"  # mapping: output -> absolute path

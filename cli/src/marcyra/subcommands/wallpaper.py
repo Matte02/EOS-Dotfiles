@@ -1,11 +1,14 @@
 import json
 import pprint
+
+import random
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Union
+from typing import Iterable, Optional, Union, Dict, List
 
 from marcyra.utils.hypr import message
 from marcyra.utils.paths import (
     ensure_dirs,
+    wallpapers_dir,
     wallpaper_map_path,
     output_link_path,
     atomic_dump,
@@ -22,7 +25,7 @@ def register(subparsers):
         "-p", "--print", metavar="FILE", help="print JSON colors for FILE (uses smart mode unless disabled)"
     )
     group.add_argument("-f", "--file", metavar="FILE", help="set a specific wallpaper file")
-    group.add_argument("-r", "--random", action="store_true", help="set a random wallpaper")
+    group.add_argument("-r", "--random", nargs="?", const=wallpapers_dir, metavar="DIR", help="set a random wallpaper")
 
     p.add_argument(
         "-o",
@@ -44,7 +47,11 @@ def run(args):
             args.file,
             outputs=getattr(args, "output", None),
         )
-    # elif args.random:
+    elif args.random:
+        set_random(
+            args.random,
+            outputs=getattr(args, "output", None),
+        )
     # Set same random wallpaper
     else:
         pprint.pp(get_wallpaper(getattr(args, "output", None)))
@@ -103,6 +110,78 @@ def load_outputs_map() -> Dict[str, str]:
 def save_outputs_map(mapping: Dict[str, str]) -> None:
     """Atomically persist the output->path mapping."""
     atomic_dump(wallpaper_map_path, mapping)
+
+
+def _iter_wallpapers(root: Path) -> List[Path]:
+    # Recursive walk; filter by known image suffixes
+    return [p for p in root.rglob("*") if is_valid_image(p)]
+
+
+# Main Functions
+def set_random(directory: Optional[Union[str, Path]] = None, outputs: Optional[Iterable[str]] = None) -> None:
+    ensure_dirs()
+
+    root = Path(directory).expanduser().resolve()
+    if not root.is_dir():
+        raise ValueError(f'"{root}" is not a directory')
+
+    targets = resolve_outputs(outputs)
+    if not targets:
+        return
+
+    wallpapers = _iter_wallpapers(root)
+    if not wallpapers:
+        raise ValueError(f'No Wallpapers found under "{root}"')
+    # Deduplicate by absolute path string
+    wallpapers_paths = list({str(p.resolve()): p.resolve() for p in wallpapers}.values())
+
+    current_map = load_outputs_map()
+    currently_used = set(current_map.values())
+
+    # Prefer pool excluding anything currently used anywhere
+    preferred_pool = [p for p in wallpapers if str(p) not in currently_used]
+
+    chosen: Dict[str, Path] = {}
+
+    # Case 1: enough unique fresh images for all outputs
+    if len(preferred_pool) >= len(targets):
+        picks = random.sample(preferred_pool, len(targets))
+        for out, wallpaper in zip(targets, picks):
+            chosen[out] = wallpaper
+    else:
+        # Take all fresh unique first
+        remaining_targets = list(targets)
+        random.shuffle(preferred_pool)
+        for wallpaper in preferred_pool:
+            if not remaining_targets:
+                break
+            out = remaining_targets.pop()
+            chosen[out] = wallpaper
+
+        # Fill the rest by relaxing constraints per-output, still avoiding its current and already chosen
+        pool_all = wallpapers_paths[:]
+        random.shuffle(pool_all)
+        assigned = {str(p) for p in chosen.values()}
+        for out in remaining_targets:
+            avoid = {current_map.get(out, "")} | assigned
+            options = [p for p in pool_all if str(p) not in avoid]
+            pick = random.choice(options if options else pool_all)
+            chosen[out] = pick
+            assigned.add(str(pick))
+
+    # Persist mapping and symlinks in a single pass
+    mapping = load_outputs_map()
+    for out, p in chosen.items():
+        mapping[out] = str(p)
+    save_outputs_map(mapping)
+
+    for out, p in chosen.items():
+        link = output_link_path(out)
+        try:
+            link.unlink(missing_ok=True)
+        except Exception:
+            pass
+        link.symlink_to(p)
 
 
 def get_wallpaper(output: Optional[str] = None) -> Union[None, str, Dict[str, str]]:
