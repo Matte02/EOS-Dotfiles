@@ -12,8 +12,25 @@ complete -c marcyra -f
 # Add help for any command
 complete -c marcyra -s 'h' -l 'help' -d 'Show help'
 
+
 # Subcommands
 complete -c marcyra -n $not_seen -a 'wallpaper' -d 'Manage the wallpapers'
+complete -c marcyra -n $not_seen -a 'shell' -d 'Start the shell or message it'
+#############
+### SHELL ###
+#############
+
+set -l commands mpris drawers wallpaper notifs
+set -l not_seen "$seen shell && not $seen $commands"
+
+complete -c marcyra -n $not_seen -s 'd' -l 'daemon' -d 'Start the shell detached'
+complete -c marcyra -n $not_seen -s 'k' -l 'kill' -d 'Kill the shell'
+
+##################
+### Wallpapers ###
+##################
+
+
 
 # Wallpaper
 complete -c marcyra -n "$seen wallpaper" -s 'p' -l 'print' -d 'Print the scheme for a wallpaper' -rF
