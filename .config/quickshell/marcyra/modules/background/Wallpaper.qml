@@ -5,15 +5,22 @@ import qs.components
 Item {
     id: root
     required property string source
+    property int loadSeq: 0
     property Image current: one
 
+    function normUrl(u) {
+        return u && u.startsWith("file://") ? u : (u ? ("file://" + u) : "");
+    }
+
     onSourceChanged: {
-        if (!source)
+        const want = normUrl(source);
+        loadSeq++;
+        if (!want) {
             current = null;
-        else if (current === one)
-            two.update();
-        else
-            one.update();
+            return;
+        }
+        const target = (current === one) ? two : one;
+        target.update(want, loadSeq);
     }
 
     anchors.fill: parent
@@ -21,7 +28,6 @@ Item {
     Img {
         id: one
     }
-
     Img {
         id: two
     }
@@ -30,43 +36,47 @@ Item {
         id: img
         anchors.fill: parent
         fillMode: Image.PreserveAspectCrop
-        cache: false
         asynchronous: true
 
-        // Visual defaults; animated to 1.0 in the "visible" state
         opacity: 0
+        property int seq: -1
+        property url desired: ""
 
-        // Normalize to file:// to satisfy Image URL expectations
-        function normUrl(u) {
-            return u && u.startsWith("file://") ? u : (u ? ("file://" + u) : "");
-        }
-
-        function update(): void {
-            const want = normUrl(root.source);
-            if (source === want) {
-                // Already showing desired image: promote immediately
-                root.current = this;
+        function update(url, s) {
+            seq = s;
+            desired = url;
+            if (source === desired && status === Image.Ready) {
+                // already usable, promote immediately
+                root.current = img;
                 return;
             }
-            // Reset visuals and trigger async decode on the hidden buffer
+            // keep old frame visible; start loading hidden buffer
             opacity = 0;
-            source = want;
+            source = desired;
         }
-        // Promote to active only after decode completes for a flicker-free fade
+
         onStatusChanged: {
-            if (status === Image.Ready)
+            if (status === Image.Ready && seq === root.loadSeq && source === desired) {
                 root.current = img;
+            }
+            // Optional: basic retry on transient errors for the latest request
+            if (status === Image.Error && seq === root.loadSeq) {
+                // Re-trigger once; a more elaborate backoff can be added if needed
+                const u = desired;
+                desired = "";
+                source = "";
+                source = u;
+            }
         }
-        // Becomes "visible" when this buffer is the active one
+
         states: State {
             name: "visible"
             when: root.current === img
-
             PropertyChanges {
                 img.opacity: 1
             }
         }
-        // Opacity crossfade; uses shared Anim defaults
+
         transitions: Transition {
             Anim {
                 target: img
