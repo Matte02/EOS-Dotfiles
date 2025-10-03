@@ -8,6 +8,9 @@ name = "marcyra"
 requires-python = ">=3.13"
 version = "0.1.0"
 dependencies = [
+    "pillow",
+    "materialyoucolor",
+    "numpy"
 ]
 
 [project.scripts]
@@ -20,3 +23,8 @@ only-include = [
 
 [tool.ruff]
 line-length = 120
+src = ["src"]
+
+[tool.ruff.lint.isort]
+known-third-party = ["materialyoucolor", "PIL", "numpy"]
+

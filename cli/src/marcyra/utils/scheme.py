@@ -154,24 +154,23 @@ class Scheme:
 
     def _update_colours(self) -> None:
         if self.name == "dynamic":
-            print("TODO: Dynamic")
-        #    from marcyra.utils.material import get_colours_for_image
-        #
-        #    try:
-        #        self._colours = get_colours_for_image()
-        #    except FileNotFoundError:
-        #        if self.notify:
-        #            notify(
-        #                "-u",
-        #                "critical",
-        #                "Unable to set dynamic scheme",
-        #                "No wallpaper set. Please set a wallpaper via `caelestia wallpaper` before setting a dynamic scheme.",
-        #            )
-        #        raise ValueError(
-        #            "No wallpaper set. Please set a wallpaper via `caelestia wallpaper` before setting a dynamic scheme."
-        #        )
-        # else:
-        self._colours = read_colours_from_file(self.get_colours_path())
+            from marcyra.utils.material import get_colours_for_image
+
+            try:
+                self._colours = get_colours_for_image()
+            except FileNotFoundError:
+                if self.notify:
+                    notify(
+                        "-u",
+                        "critical",
+                        "Unable to set dynamic scheme",
+                        "No wallpaper set. Please set a wallpaper via `caelestia wallpaper` before setting a dynamic scheme.",
+                    )
+                raise ValueError(
+                    "No wallpaper set. Please set a wallpaper via `caelestia wallpaper` before setting a dynamic scheme."
+                )
+        else:
+            self._colours = read_colours_from_file(self.get_colours_path())
 
     def __str__(self) -> str:
         return (
@@ -181,8 +180,22 @@ class Scheme:
             f"    Mode: {self.mode}\n"
             f"    Variant: {self.variant}\n"
             f"    Colours:\n"
-            f"        {'\n        '.join(f'{n}: \x1b[38;2;{int(c[0:2], 16)};{int(c[2:4], 16)};{int(c[4:6], 16)}m{c}\x1b[0m' for n, c in self.colours.items())}"
+            f"        {'\n        '.join(f'{n}: {render_swatch(c, 6)}' for n, c in self.colours.items())}"
         )
+
+
+def rgb_from_hex(h: str) -> tuple[int, int, int]:
+    s = h.lstrip("#")
+    return int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16)  # 0-255 each [r,g,b]
+
+
+def render_swatch(hexval: str, width: int = 6) -> str:
+    r, g, b = rgb_from_hex(hexval)
+    fg = f"\x1b[38;2;{r};{g};{b}m"  # truecolor foreground
+    reset = "\x1b[0m"
+    block = "█" * width  # U+2588 FULL BLOCK
+    # Example: [fg blocks] colored hex text
+    return f"{fg}{block}{reset} {fg}#{hexval.lstrip('#')}{reset}"
 
 
 scheme_variants = [

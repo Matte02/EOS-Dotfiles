@@ -26,8 +26,11 @@ cli_data_dir = Path(__file__).parent.parent / "data"
 
 wallpapers_dir = os.getenv("MARCYRA_WALLPAPERS_DIR", pictures_dir / "Wallpapers")
 wallpaper_state_dir = m_state_dir / "wallpaper"
-wallpaper_outputs_dir = wallpaper_state_dir / "outputs"  # per-output symlinks
-wallpaper_map_path = wallpaper_state_dir / "outputs.json"  # mapping: output -> absolute path
+wallpaper_map_path = wallpaper_state_dir / "outputs.json"
+thumbs_map_path = wallpaper_state_dir / "thumbs.json"  # NEW: output -> absolute thumbnail path
+
+wallpaper_main_output_path = wallpaper_state_dir / "main-output.txt"
+wallpaper_thumbnail_path = wallpaper_state_dir / "thumbnail.jpg"
 
 # Wallpaper cache (per-image hash)
 wallpapers_cache_dir = m_cache_dir / "wallpapers"  # each image gets a hashed subdir
@@ -47,20 +50,46 @@ def ensure_dirs() -> None:
         m_state_dir,
         m_cache_dir,
         wallpaper_state_dir,
-        wallpaper_outputs_dir,
         wallpapers_cache_dir,
     ):
         p.mkdir(parents=True, exist_ok=True)
 
 
-def output_link_path(output: str) -> Path:
-    """Symlink target used by QuickShell/consumers to detect changes for a given output."""
-    return wallpaper_outputs_dir / output
+def load_json_or(path: Path, default):
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return default
 
 
-def output_thumb_link_path(output: str) -> Path:
-    """Optional per-output thumbnail symlink for UI surfaces."""
-    return wallpaper_outputs_dir / f"{output}.thumb.jpg"
+def safe_symlink(link: Path, target: Path) -> None:
+    link.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        link.unlink(missing_ok=True)
+    except TypeError:
+        try:
+            link.unlink()
+        except FileNotFoundError:
+            pass
+    link.symlink_to(target)
+
+
+def atomic_dump(path: Path, content: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile("w", dir=path.parent, delete=False, encoding="utf-8") as f:
+        json.dump(content, f)
+        f.flush()
+        os.fsync(f.fileno())
+        tmp = f.name
+    os.replace(tmp, path)  # atomic within same dir/filesystem
+    try:
+        dfd = os.open(path.parent, os.O_DIRECTORY)
+        try:
+            os.fsync(dfd)
+        finally:
+            os.close(dfd)
+    except Exception:
+        pass
 
 
 def image_cache_dir(image_path: Path | str) -> Path:
@@ -79,13 +108,3 @@ def compute_hash(path: Path | str) -> str:
         while chunk := f.read(8192):
             sha.update(chunk)
     return sha.hexdigest()
-
-
-def atomic_dump(path: Path, content: dict[str, object]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile("w", delete=False) as f:
-        json.dump(content, f)
-        f.flush()
-        os.fsync(f.fileno())
-        tempname = f.name
-    shutil.move(tempname, path)

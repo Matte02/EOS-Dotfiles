@@ -115,3 +115,85 @@ complete -c marcyra -n "$seen wallpaper" -s o -l output \
   -a '(__marcyra_list_outputs_tsv)' \
   -d 'The output monitor'
 
+
+
+# marcyra scheme completions
+
+# -------------
+# Helper loaders
+# -------------
+function __marcyra_scheme_names --description 'List scheme names'
+    marcyra scheme list --names 2>/dev/null
+end
+
+function __marcyra_scheme_flavours --description 'List scheme flavours'
+    marcyra scheme list --flavours 2>/dev/null
+end
+
+function __marcyra_scheme_modes --description 'List scheme modes'
+    # Parser only allows dark/light, so keep static for speed
+    printf '%s\n' dark light
+end
+
+function __marcyra_scheme_variants --description 'List scheme variants'
+    marcyra scheme list --variants 2>/dev/null
+end
+
+# -----------------
+# Subcommand parent
+# -----------------
+# Offer "scheme" when no subcommand has been chosen yet
+complete -c marcyra -n 'not __fish_seen_subcommand_from scheme' \
+  -a scheme -d 'manage the colour scheme'
+
+# Inside "scheme", offer its subcommands when none picked
+complete -c marcyra -n '__fish_seen_subcommand_from scheme; and not __fish_seen_subcommand_from list get set' \
+  -a 'list get set' -d 'list/get/set scheme data'
+
+# ----
+# list
+# ----
+complete -c marcyra -n '__fish_seen_subcommand_from scheme; and __fish_seen_subcommand_from list' \
+  -s n -l names -d 'list scheme names'
+
+complete -c marcyra -n '__fish_seen_subcommand_from scheme; and __fish_seen_subcommand_from list' \
+  -s f -l flavours -d 'list scheme flavours'
+
+complete -c marcyra -n '__fish_seen_subcommand_from scheme; and __fish_seen_subcommand_from list' \
+  -s m -l modes -d 'list scheme modes'
+
+complete -c marcyra -n '__fish_seen_subcommand_from scheme; and __fish_seen_subcommand_from list' \
+  -s v -l variants -d 'list scheme variants'
+
+# ---
+# get
+# ---
+complete -c marcyra -n '__fish_seen_subcommand_from scheme; and __fish_seen_subcommand_from get' \
+  -s n -l name -d 'print the current scheme name'
+
+complete -c marcyra -n '__fish_seen_subcommand_from scheme; and __fish_seen_subcommand_from get' \
+  -s f -l flavour -d 'print the current scheme flavour'
+
+complete -c marcyra -n '__fish_seen_subcommand_from scheme; and __fish_seen_subcommand_from get' \
+  -s m -l mode -d 'print the current scheme mode'
+
+complete -c marcyra -n '__fish_seen_subcommand_from scheme; and __fish_seen_subcommand_from get' \
+  -s v -l variant -d 'print the current scheme variant'
+
+
+# Flags without arguments (unchanged)
+complete -c marcyra -n '__fish_seen_subcommand_from scheme; and __fish_seen_subcommand_from set' \
+  -l notify -d 'send a notification on error'
+complete -c marcyra -n '__fish_seen_subcommand_from scheme; and __fish_seen_subcommand_from set' \
+  -s r -l random -d 'switch to a random scheme'
+
+# Arguments with required values and no file completion
+# Use -x as shorthand for: --require-parameter (-r) + --no-files (-f)
+complete -c marcyra -n '__fish_seen_subcommand_from scheme; and __fish_seen_subcommand_from set' \
+  -s n -l name -x -a '(__marcyra_scheme_names)' -d 'the scheme name to switch to'
+complete -c marcyra -n '__fish_seen_subcommand_from scheme; and __fish_seen_subcommand_from set' \
+  -s f -l flavour -x -a '(__marcyra_scheme_flavours)' -d 'the flavour to switch to'
+complete -c marcyra -n '__fish_seen_subcommand_from scheme; and __fish_seen_subcommand_from set' \
+  -s m -l mode -x -a '(__marcyra_scheme_modes)' -d 'the mode to switch to'
+complete -c marcyra -n '__fish_seen_subcommand_from scheme; and __fish_seen_subcommand_from set' \
+  -s v -l variant -x -a '(__marcyra_scheme_variants)' -d 'the variant to switch to'
