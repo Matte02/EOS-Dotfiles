@@ -164,10 +164,10 @@ class Scheme:
                         "-u",
                         "critical",
                         "Unable to set dynamic scheme",
-                        "No wallpaper set. Please set a wallpaper via `caelestia wallpaper` before setting a dynamic scheme.",
+                        "No wallpaper set. Please set a wallpaper via `marcyra wallpaper` before setting a dynamic scheme.",
                     )
                 raise ValueError(
-                    "No wallpaper set. Please set a wallpaper via `caelestia wallpaper` before setting a dynamic scheme."
+                    "No wallpaper set. Please set a wallpaper via `marcyra wallpaper` before setting a dynamic scheme."
                 )
         else:
             self._colours = read_colours_from_file(self.get_colours_path())

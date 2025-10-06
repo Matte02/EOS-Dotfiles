@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-# Utility script for running caelestia
+# Utility script for running marcyra
 
 cd "$(dirname $0)/../src" || exit
 

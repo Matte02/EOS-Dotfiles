@@ -133,8 +133,8 @@ ForegroundPositive={{ $kpositive }}
 ForegroundVisited={{ $kvisited }}
 
 [General]
-ColorScheme=Caelestia
-Name=Caelestia
+ColorScheme=Marcyra
+Name=Marcyra
 shadeSortColumn=true
 
 [KDE]

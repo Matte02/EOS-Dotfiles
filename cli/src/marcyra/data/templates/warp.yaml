@@ -1,5 +1,5 @@
 ---
-name: 'Caelestia Theme'
+name: 'Marcyra Theme'
 accent: '{{ $primary }}'
 background: '{{ $surface }}'
 foreground: '{{ $onSurface }}'

@@ -6,6 +6,7 @@ from typing import Iterable, Optional, Union, Dict, List, Tuple
 
 from PIL import Image
 from marcyra.utils.material import get_colours_for_image
+from marcyra.utils.theme import apply_colours
 from materialyoucolor.hct import Hct
 from materialyoucolor.utils.color_utils import argb_from_rgb
 
@@ -165,10 +166,11 @@ def get_smart_options(wall: Path, cache: Path) -> Dict[str, str]:
     with Image.open(thumb) as img:
         options["variant"] = get_variant(img)
         # 1x1 to probe light/dark tone cheaply
-        tiny = img.copy()
-        tiny.thumbnail((1, 1), Image.LANCZOS)
-        hct = Hct.from_int(argb_from_rgb(*tiny.getpixel((0, 0))))
-        options["mode"] = "light" if hct.tone > 60 else "dark"
+        options["mode"] = "dark"
+        # tiny = img.copy()
+        # tiny.thumbnail((1, 1), Image.LANCZOS)
+        # hct = Hct.from_int(argb_from_rgb(*tiny.getpixel((0, 0))))
+        # options["mode"] = "light" if hct.tone > 200 else "dark"
 
     options_cache.parent.mkdir(parents=True, exist_ok=True)
     options_cache.write_text(json.dumps(options), encoding="utf-8")
@@ -286,6 +288,7 @@ def apply_wallpapers(assignments: Dict[str, Path]) -> None:
             scheme.mode = smart["mode"]
             scheme.variant = smart["variant"]
         scheme.update_colours()
+        apply_colours(scheme.colours, scheme.mode)
 
 
 # -------- Public API --------

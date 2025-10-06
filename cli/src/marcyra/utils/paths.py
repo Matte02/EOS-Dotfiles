@@ -22,6 +22,7 @@ m_cache_dir = cache_dir / "marcyra"
 # CLI Directories
 cli_data_dir = Path(__file__).parent.parent / "data"
 
+
 # Wallpaper state (multi-output)
 
 wallpapers_dir = os.getenv("MARCYRA_WALLPAPERS_DIR", pictures_dir / "Wallpapers")
@@ -39,6 +40,9 @@ wallpapers_cache_dir = m_cache_dir / "wallpapers"  # each image gets a hashed su
 scheme_path = m_state_dir / "scheme.json"
 scheme_data_dir = cli_data_dir / "schemes"
 scheme_cache_dir = m_cache_dir / "schemes"
+
+# Themes
+templates_dir = cli_data_dir / "templates"
 
 
 # Utilities
