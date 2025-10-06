@@ -6,3 +6,7 @@ build/
 
 
 .qmlls.ini
+
+.config/hypr/scheme/current.conf
+.gitignore
+.config/btop/themes/marcyra.theme
