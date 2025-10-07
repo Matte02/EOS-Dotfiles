@@ -19,6 +19,13 @@ def gen_conf(colours: dict[str, str]) -> str:
     return conf
 
 
+def gen_scss(colours: dict[str, str]) -> str:
+    scss = ""
+    for name, colour in colours.items():
+        scss += f"${name}: #{colour};\n"
+    return scss
+
+
 def gen_replace(colours: dict[str, str], template: Path, hash: bool = False) -> str:
     template = template.read_text()
     for name, colour in colours.items():
@@ -153,6 +160,18 @@ general="Sans Serif,12,-1,5,400,0,0,0,0,0,0,0,0,0,0,1"
         write_file(config_dir / f"qt{ver}ct/qt{ver}ct.conf", conf)
 
 
+@log_exception
+def apply_discord(scss: str) -> None:
+    import tempfile
+
+    with tempfile.TemporaryDirectory("w") as tmp_dir:
+        (Path(tmp_dir) / "_colours.scss").write_text(scss)
+        conf = subprocess.check_output(["sass", "-I", tmp_dir, templates_dir / "discord.scss"], text=True)
+
+    for client in "Equicord", "Vencord", "BetterDiscord", "equibop", "vesktop", "legcord":
+        write_file(config_dir / client / "themes/marcyra.theme.css", conf)
+
+
 def apply_colours(colours: dict[str, str], mode: str) -> None:
     apply_terms(gen_sequences(colours))
     apply_hypr(gen_conf(colours))
@@ -161,4 +180,5 @@ def apply_colours(colours: dict[str, str], mode: str) -> None:
     apply_htop(colours)
     apply_qt(colours, mode)
     apply_gtk(colours, mode)
+    apply_discord(gen_scss(colours))
     return

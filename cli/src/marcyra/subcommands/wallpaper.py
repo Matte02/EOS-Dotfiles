@@ -255,6 +255,7 @@ def set_main_output(output: str) -> None:
         scheme.mode = smart["mode"]
         scheme.variant = smart["variant"]
     scheme.update_colours()
+    apply_colours(scheme.colours, scheme.mode)
 
 
 # -------- Wall application --------

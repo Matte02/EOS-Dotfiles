@@ -7,6 +7,15 @@ This is very much in progress. And is mostly me trying to learn ricing, as such 
 # Requirements/Dependecies
 TODO
 
+## Pacman
+
+- dart-sass
+
+## yay
+
+- betterdiscordctl / equicord-installer-bin
+
+
 # STOW Guide
 Guide: https://www.youtube.com/watch?v=y6XCebnB9gs
 
@@ -29,3 +38,4 @@ TODO: Add dependencies requirements
 - cmake
 - Ninja
 - sudo pacman -S qt6-declarative gcc-libs glibc ttf-cascadia-mono-nerd libqalculate --needed
+
