@@ -15,6 +15,15 @@ TODO
 
 - betterdiscordctl / equicord-installer-bin
 
+## Hyprland Plugins:
+
+hyprpm update
+hyprpm add https://github.com/shezdy/hyprsplit
+hyprpm enable hyprsplit
+
+hyprpm update
+hyprpm add https://github.com/KZDKM/Hyprspace
+hyprpm enable Hyprspace
 
 # STOW Guide
 Guide: https://www.youtube.com/watch?v=y6XCebnB9gs
@@ -38,4 +47,5 @@ TODO: Add dependencies requirements
 - cmake
 - Ninja
 - sudo pacman -S qt6-declarative gcc-libs glibc ttf-cascadia-mono-nerd libqalculate --needed
+
 
