@@ -106,7 +106,6 @@ def run(args):
     elif args.sort:
         sort_buckets(
             directory=args.sort,
-            method=args.method,
             update_symlinks=not args.no_symlinks,
             min_size=args.min_size,
         )
@@ -316,6 +315,7 @@ def apply_wallpapers(assignments: Dict[str, Path]) -> None:
 # -------- Public API --------
 
 
+## TODO: Look over this code. Try to improve random selection. For example avoid selecting the same wallpaper twice.
 def set_random(directory: Optional[Union[str, Path]] = None, outputs: Optional[Iterable[str]] = None) -> None:
     ensure_dirs()
     root = Path(directory or wallpapers_dir).expanduser().resolve()
