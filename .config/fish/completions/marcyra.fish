@@ -116,6 +116,27 @@ complete -c marcyra -n "$seen wallpaper" -s o -l output \
   -d 'The output monitor'
 
 
+# -s/--sort: suggest directories from default base unless user started a path
+complete -c marcyra -n "$seen wallpaper; and not __marcyra_token_is_path" \
+  -s s -l sort -r -a '(__marcyra_list_wall_dirs)' -d 'Sort wallpapers into color buckets'
+
+# -s/--sort fallback: normal path completion once a path is started
+complete -c marcyra -n "$seen wallpaper; and __marcyra_token_is_path" \
+  -s s -l sort -rF -d 'Sort wallpapers into color buckets'
+
+# --method: clustering method
+complete -c marcyra -n "$seen wallpaper" -l method \
+  -a 'kmeans gmm agglomerative dbscan spectral quantize' \
+  -d 'Clustering method for wallpaper buckets'
+
+# --min-size: minimum number of wallpapers per bucket
+complete -c marcyra -n "$seen wallpaper" -l min-size -x \
+  -d 'Minimum wallpapers per bucket before merging small clusters'
+
+# --no-symlinks: skip symlink creation
+complete -c marcyra -n "$seen wallpaper" -l no-symlinks \
+  -d 'Skip creating or updating symlink directories'
+
 
 # marcyra scheme completions
 

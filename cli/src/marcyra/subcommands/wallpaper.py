@@ -15,6 +15,7 @@ from marcyra.utils.hypr import message
 from marcyra.utils.paths import (
     compute_hash,
     ensure_dirs,
+    get_thumb,
     wallpaper_map_path,
     thumbs_map_path,
     wallpaper_thumbnail_path,
@@ -25,7 +26,9 @@ from marcyra.utils.paths import (
     wallpapers_cache_dir,
     image_cache_dir,
     wallpapers_dir,
+    wallpaper_buckets_path,
 )
+from marcyra.utils.buckets import sort_buckets
 
 VALID_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff"}
 
@@ -47,6 +50,29 @@ def register(subparsers):
         dest="set_main_output",
         metavar="OUTPUT",
         help="set the main output used for dynamic scheming",
+    )
+    group.add_argument(
+        "-s", "--sort", nargs="?", const=wallpapers_dir, metavar="DIR", help="sort wallpapers into color buckets"
+    )
+
+    # Add optional args that apply only when using --sort
+    p.add_argument(
+        "--method",
+        choices=["kmeans", "gmm", "agglomerative", "dbscan", "spectral", "quantize"],
+        default="gmm",
+        help="clustering method (default: gmm)",
+    )
+    p.add_argument(
+        "--min-size",
+        type=int,
+        default=3,
+        metavar="N",
+        help="minimum bucket size before merging small clusters (default: 3)",
+    )
+    p.add_argument(
+        "--no-symlinks",
+        action="store_true",
+        help="skip creating/updating symlink directories",
     )
 
     p.add_argument(
@@ -76,7 +102,14 @@ def run(args):
             args.random,
             outputs=getattr(args, "output", None),
         )
-    # Set same random wallpaper
+
+    elif args.sort:
+        sort_buckets(
+            directory=args.sort,
+            method=args.method,
+            update_symlinks=not args.no_symlinks,
+            min_size=args.min_size,
+        )
     else:
         print_wallpaper_report()
 
@@ -138,17 +171,6 @@ def iter_wallpapers(root: Path) -> List[Path]:
             if rp not in seen:
                 seen[rp] = p.resolve()
     return list(seen.values())
-
-
-def get_thumb(src: Path, cache: Path) -> Path:
-    thumb = cache / "thumbnail.jpg"
-    if not thumb.exists():
-        cache.mkdir(parents=True, exist_ok=True)
-        with Image.open(src) as img:
-            img = img.convert("RGB")
-            img.thumbnail((128, 128), Image.LANCZOS)
-            img.save(thumb, "JPEG")
-    return thumb
 
 
 def get_smart_options(wall: Path, cache: Path) -> Dict[str, str]:
@@ -242,8 +264,7 @@ def set_main_output(output: str) -> None:
 
     wall = Path(wall_str)
     if output not in thumbs_map:
-        cache = image_cache_dir(wall)
-        thumb = get_thumb(wall, cache)
+        thumb = get_thumb(wall)
         thumbs_map[output] = str(thumb)
         save_thumbs_map(thumbs_map)
 
@@ -309,8 +330,52 @@ def set_random(directory: Optional[Union[str, Path]] = None, outputs: Optional[I
     if not candidates:
         raise ValueError(f'No wallpapers found under "{root}"')
 
-    current_map = load_outputs_map()
-    chosen = choose_for_targets(targets, candidates, current_map)
+    # Load color buckets (if they exist)
+    bucket_map = load_json_or(wallpaper_buckets_path, {})
+    inverse_buckets: Dict[str, List[Path]] = defaultdict(list)
+    for bucket_id, walls in bucket_map.items():
+        for w in walls:
+            inverse_buckets[str(Path(w).resolve())].append(bucket_id)
+
+    # Pick a random wallpaper
+    first_wall = random.choice(candidates)
+    chosen_bucket = None
+    related_candidates: List[Path] = []
+
+    if str(first_wall.resolve()) in inverse_buckets:
+        # Get the first bucket this wallpaper belongs to
+        bucket_id = inverse_buckets[str(first_wall.resolve())][0]
+        same_bucket = [Path(w).resolve() for w in bucket_map[bucket_id]]
+        # Filter out the same file
+        related_candidates = [w for w in same_bucket if w != first_wall]
+        chosen_bucket = bucket_id
+
+    # If bucket empty or missing, fallback to full random set
+    if not related_candidates:
+        related_candidates = [w for w in candidates if w != first_wall]
+
+    # Build wallpaper selection for all outputs
+    num_needed = len(targets)
+    selection_pool = [first_wall] + random.sample(related_candidates, k=min(len(related_candidates), num_needed - 1))
+    random.shuffle(selection_pool)
+
+    chosen: Dict[str, Path] = {}
+    for out, wall in zip(targets, selection_pool):
+        chosen[out] = wall
+
+    # If we still need more wallpapers (fewer candidates than outputs), fill randomly
+    while len(chosen) < num_needed:
+        wall = random.choice(candidates)
+        if wall not in chosen.values():
+            next_out = [o for o in targets if o not in chosen][0]
+            chosen[next_out] = wall
+
+    print(f"[info] selected {len(chosen)} wallpapers")
+    if chosen_bucket:
+        print(f"[info] using bucket: {chosen_bucket}")
+    else:
+        print("[info] no bucket found, using global random selection")
+
     apply_wallpapers(chosen)
 
 

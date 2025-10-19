@@ -10,7 +10,8 @@ version = "0.1.0"
 dependencies = [
     "pillow",
     "materialyoucolor",
-    "numpy"
+    "numpy",
+    "scikit-learn"
 ]
 
 [project.scripts]

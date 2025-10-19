@@ -3,6 +3,8 @@ import json
 import os
 import tempfile
 from pathlib import Path
+from typing import Optional
+from PIL import Image
 
 config_dir = Path(os.getenv("XDG_CONFIG_HOME", Path.home() / ".config"))
 data_dir = Path(os.getenv("XDG_DATA_HOME", Path.home() / ".local/share"))
@@ -31,6 +33,7 @@ thumbs_map_path = wallpaper_state_dir / "thumbs.json"  # NEW: output -> absolute
 
 wallpaper_main_output_path = wallpaper_state_dir / "main-output.txt"
 wallpaper_thumbnail_path = wallpaper_state_dir / "thumbnail.jpg"
+wallpaper_buckets_path = wallpaper_state_dir / "buckets.json"
 
 # Wallpaper cache (per-image hash)
 wallpapers_cache_dir = m_cache_dir / "wallpapers"  # each image gets a hashed subdir
@@ -111,3 +114,16 @@ def compute_hash(path: Path | str) -> str:
         while chunk := f.read(8192):
             sha.update(chunk)
     return sha.hexdigest()
+
+
+def get_thumb(src: Path, cache: Optional[Path] = None) -> Path:
+    if not cache:
+        cache = image_cache_dir(src)
+    thumb = cache / "thumbnail.jpg"
+    if not thumb.exists():
+        cache.mkdir(parents=True, exist_ok=True)
+        with Image.open(src) as img:
+            img = img.convert("RGB")
+            img.thumbnail((128, 128), Image.LANCZOS)
+            img.save(thumb, "JPEG")
+    return thumb

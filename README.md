@@ -49,3 +49,5 @@ TODO: Add dependencies requirements
 - sudo pacman -S qt6-declarative gcc-libs glibc ttf-cascadia-mono-nerd libqalculate --needed
 
 
+# Wallpapers
+OBS! Color Buckets in CLI isn't very roubust at the moment. Might easiliy break/ exists a fair share amount of bugs. But it seems to be working alright on my machine.
